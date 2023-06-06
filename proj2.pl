@@ -22,6 +22,7 @@
 % FreezeTime e Appearance time só é usado no caso dinamico
 
 
+
 aircraft_landing(LandingTimes):-
 see('/home/miguel/Documents/Faculdade/PLR/FEUP-PLR/airland1.txt'),
 first_line_process(NumberPlanes,_),
@@ -30,18 +31,19 @@ seen,!,
 length(LandingTimes,NumberPlanes),
 all_distinct(LandingTimes),
 enforce_earliest_and_latest_landing(EarliestLandingTimes,LatestLandingTimes,LandingTimes),
-plane_i_lands_before_j_or_vice_versa(LandingTimes,LandingTimes),
-enforce_separation(LandingTimes,SeparationTimes,LandingTimes), %o problema está aqui
+% plane_i_lands_before_j_or_vice_versa(LandingTimes,LandingTimes),
+Stop is NumberPlanes+1,
+enforce_separation(1,Stop,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes), %o problema está aqui
 length(TimesBefore,NumberPlanes),
 length(TimesAfter,NumberPlanes),
-times_before_target(TargetLandingTimes,LandingTimes,TimesBefore,EarliestLandingTimes),
-times_after_target(TargetLandingTimes,LandingTimes,TimesAfter,LatestLandingTimes),
+times_before_target(TargetLandingTimes,TimesBefore,EarliestLandingTimes),
+times_after_target(TargetLandingTimes,TimesAfter,LatestLandingTimes),
+relate_times_before_and_after(TimesBefore,TimesAfter,TargetLandingTimes,LandingTimes),
 scalar_product(PenaltyBefore,TimesBefore,#=,FirstVal),
 scalar_product(PenaltyAfter,TimesAfter,#=,SecondVal),
 sum([FirstVal,SecondVal],#=,Sum),
-write(LandingTimes),
 labeling([minimize(Sum),time_out(600000,Flag),ffc,bisect],LandingTimes),
-nl,write(Sum),nl,write(TimesAfter),write(TimesBefore),nl,write(Flag).
+nl,write(Sum),nl,write(TimesAfter),write(TimesBefore).
 
 
 % -------------- File Reading Predicates -------------- %
@@ -102,43 +104,72 @@ enforce_earliest_and_latest_landing(TELT,TLLT,TLT).
 
 
 
-times_before_target([],[],[],[]).
+times_before_target([],[],[]).
 % times_before_target(Target Landing Times,Landing Times, Times Before Landing - αi)
 
-times_before_target([HTLT|TTLT],[HLT|TLT],[HTB|TTB],[HELT|TELT]):-
+times_before_target([HTLT|TTLT],[HTB|TTB],[HELT|TELT]):-
 MaxDomain is HTLT-HELT,
 domain([HTB],0,MaxDomain),
-Val #= HTLT - HLT,
-(HTLT #> HLT) #<=> X,
-HTB #= Val*X,
-times_before_target(TTLT,TLT,TTB,TELT).
+times_before_target(TTLT,TTB,TELT).
 
 
-times_after_target([],[],[],[]).
+times_after_target([],[],[]).
 
 % times_before_target(Target Landing Times,Landing Times, Times After Landing - βi)
-times_after_target([HTLT|TTLT],[HLT|TLT],[HTA|TTA],[HLLT|TLLT]):-
+times_after_target([HTLT|TTLT],[HTA|TTA],[HLLT|TLLT]):-
 MaxDomain is HLLT-HTLT,
 domain([HTA],0,MaxDomain),
-Val #= HLT - HTLT,
-(HTLT #< HLT) #<=> X,
-HTA #= Val*X,
-times_after_target(TTLT,TLT,TTA,TLLT).
+times_after_target(TTLT,TTA,TLLT).
+
+relate_times_before_and_after([],[],[],[]).
+
+relate_times_before_and_after([HTB|TTB],[HTA|TTA],[HTLT|TTLT],[HLT|TLT]):-
+minimum(0,[HTB,HTA]),
+HLT#=HTLT-HTB+HTA,
+relate_times_before_and_after(TTB,TTA,TTLT,TLT).
 
 
-enforce_separation_rec(_,[],[]).
+% enforce_separation_rec(_,[],[]).
 
-enforce_separation_rec(CurrentL,[HLT|TLT],[HST|TST]):-
-((CurrentL#\=HLT) #/\ (abs(CurrentL-HLT) #>= HST)) #\/ (CurrentL#=HLT),
-enforce_separation_rec(CurrentL,TLT,TST).
+% enforce_separation_rec(CurrentL,[HLT|TLT],[HST|TST]):-
+% ((CurrentL#\=HLT) #/\ (abs(CurrentL-HLT) #>= HST)) #\/ (CurrentL#=HLT),
+% enforce_separation_rec(CurrentL,TLT,TST).
 
 
-% Isto está mal portanto ignora só
-enforce_separation(_,[],_).
+% enforce_separation(_,[],_).
 
-enforce_separation([CurrentL|TLT],[HST|TST],LandingTimes):-
-enforce_separation_rec(CurrentL,LandingTimes,HST),
-enforce_separation(TLT,TST,LandingTimes).
+% enforce_separation([CurrentL|TLT],[HST|TST],LandingTimes):-
+% enforce_separation_rec(CurrentL,LandingTimes,HST),
+% enforce_separation(TLT,TST,LandingTimes).
+
+enforce_separation_rec(_,NumberPlanes,NumberPlanes,_,_,_,_).
+
+enforce_separation_rec(IndexI,IndexJ,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes):-
+nth1(IndexI,LatestLandingTimes,Li),
+nth1(IndexJ,LatestLandingTimes,Lj),
+nth1(IndexJ,EarliestLandingTimes,Ej),
+nth1(IndexI,EarliestLandingTimes,Ei),
+nth1(IndexI,SeparationTimes,SubSep),
+nth1(IndexJ,SubSep,SepTime),
+element(IndexI,LandingTimes,Xi),
+element(IndexJ,LandingTimes,Xj),
+(Xi#<Xj) #<=> Mij,
+(Xj#<Xi) #<=> Mji,
+(IndexI#=IndexJ) #\/ 
+((IndexI#\=IndexJ) #/\ (Li#<Ej #/\ Xi#<Xj) #/\ ((Li+SepTime#>Ej #/\ Xj#>=Xi+SepTime) #\/ (Li+SepTime#=<Ej))) #\/
+((IndexI#\=IndexJ) #/\ ((Ei#>=Ej #/\ Ei#=<Lj) #\/ (Li#>=Ej #/\ Li#=<Lj) #\/ (Ej#>=Ei #/\ Ej#=<Li) #\/ (Lj#>=Ei #/\ Lj#=<Li)) #/\ (Xj#>=Xi+SepTime*Mij-(Li-Ej)*Mji)),
+NewIndexJ is IndexJ+1, 
+enforce_separation_rec(IndexI,NewIndexJ,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes).
+
+
+
+enforce_separation(NumberPlanes,NumberPlanes,_,_,_,_).
+
+enforce_separation(IndexI,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes):-
+NewIndexI is IndexI+1,
+enforce_separation_rec(IndexI,1,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes),
+enforce_separation(NewIndexI,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes).
+
 
 plane_i_lands_before_j_or_vice_versa_rec(_,[]).
 
