@@ -27,6 +27,7 @@ see('/home/miguel/Documents/Faculdade/PLR/FEUP-PLR/airland1.txt'),
 first_line_process(NumberPlanes,_),
 remaining_lines_process(NumberPlanes,_,EarliestLandingTimes,TargetLandingTimes,LatestLandingTimes,PenaltyBefore,PenaltyAfter,SeparationTimes),
 seen,!,
+statistics(runtime, [Start|_]),
 length(LandingTimes,NumberPlanes),
 all_distinct(LandingTimes),
 enforce_earliest_and_latest_landing(EarliestLandingTimes,LatestLandingTimes,LandingTimes),
@@ -41,7 +42,9 @@ scalar_product(PenaltyAfter,TimesAfter,#=,SecondVal),
 sum([FirstVal,SecondVal],#=,Sum),
 write(LandingTimes),
 labeling([minimize(Sum),time_out(600000,Flag),ffc,bisect],LandingTimes),
-nl,write(Sum),nl,write(TimesAfter),write(TimesBefore),nl,write(Flag).
+statistics(runtime, [End|_]),
+ExecutionTime is End-Start,
+nl,write('Sum: '),write(Sum),nl,write('Times After: '),write(TimesAfter),nl,write('Times Before: '),write(TimesBefore),nl,write('Execution Time: '),write(ExecutionTime),nl,write(Flag).
 
 
 % -------------- File Reading Predicates -------------- %
