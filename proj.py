@@ -4,7 +4,7 @@ from ortools.sat.python import cp_model
 def aircraft_landing():
     # Read data from the file
     # with open('/home/miguel/Documents/Faculdade/PLR/FEUP-PLR/airland1.txt', 'r') as file:
-    with open('/Users/mafalda/Documents/FEUP/PLR/FEUP-PLR/airland1.txt', 'r') as file:
+    with open('airland1.txt', 'r') as file:
         lines = file.readlines()
 
     # Extract values from the first line
@@ -52,19 +52,23 @@ def aircraft_landing():
     # print(separation_times)
 
     model = cp_model.CpModel()
-    landing_times = [model.NewIntVar(0, max(latest_landing_times), f"LandingTime{i+1}") for i in range(number_planes)]
+    landing_times = [model.NewIntVar(0, latest_landing_times[i], f"LandingTime{i+1}") for i in range(number_planes)]
+
+    model.AddAllDifferent(landing_times)
     
     # Earliest and latest landing times constraints
     for i in range(number_planes):
         model.Add(landing_times[i] >= earliest_landing_times[i])
         model.Add(landing_times[i] <= latest_landing_times[i])
+
+    # print("Model -", model)
     
     # Separation constraints
     for i in range(number_planes):
         for j in range(number_planes):
             if i != j:
-                model.Add(landing_times[i] >= landing_times[j] + separation_times[i][j])
-                model.Add(landing_times[j] >= landing_times[i] + separation_times[j][i])
+                model.Add(landing_times[i] >= landing_times[j] - separation_times[j][i])
+                model.Add(landing_times[i] >= landing_times[j] + separation_times[j][i])
 
     times_before = [model.NewIntVar(0, target_landing_times[i] - earliest_landing_times[i], f"TimesBefore{i+1}") for i in range(number_planes)]
     times_after = [model.NewIntVar(0, latest_landing_times[i] - target_landing_times[i], f"TimesAfter{i+1}") for i in range(number_planes)]
