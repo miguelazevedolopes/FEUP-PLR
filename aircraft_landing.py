@@ -3,7 +3,7 @@ from ortools.sat.python import cp_model
 
 def aircraft_landing():
     # Read data from the file
-    with open('airland1.txt', 'r') as file:
+    with open('data/airland8.txt', 'r') as file:
         lines = file.readlines()
 
     # Extract values from the first line
@@ -79,7 +79,7 @@ def aircraft_landing():
     model.Minimize(objective_expr)
 
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 600
+    solver.parameters.max_time_in_seconds = 0.09
     status = solver.Solve(model)
 
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
