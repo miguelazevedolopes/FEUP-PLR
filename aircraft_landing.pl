@@ -22,7 +22,7 @@
 % FreezeTime e Appearance time só é usado no caso dinamico
 
 
-aircraft_landing(LandingTimes):-
+aircraft_landing:-
 see('/home/miguel/Documents/Faculdade/PLR/FEUP-PLR/airland1.txt'),
 first_line_process(NumberPlanes,_),
 remaining_lines_process(NumberPlanes,_,EarliestLandingTimes,TargetLandingTimes,LatestLandingTimes,PenaltyBefore,PenaltyAfter,SeparationTimes),
@@ -40,8 +40,7 @@ relate_times_before_and_after(TimesBefore,TimesAfter,TargetLandingTimes,LandingT
 scalar_product(PenaltyBefore,TimesBefore,#=,FirstVal),
 scalar_product(PenaltyAfter,TimesAfter,#=,SecondVal),
 sum([FirstVal,SecondVal],#=,Sum),
-write(LandingTimes),
-labeling([minimize(Sum),time_out(600000,Flag),ffc,bisect],LandingTimes),
+labeling([minimize(Sum),time_out(600000,Flag),leftmost,median,up],LandingTimes),
 statistics(runtime, [End|_]),
 ExecutionTime is End-Start,
 nl,write('Sum: '),write(Sum),nl,write('Times After: '),write(TimesAfter),nl,write('Times Before: '),write(TimesBefore),nl,write('Execution Time: '),write(ExecutionTime),nl,write(Flag).
