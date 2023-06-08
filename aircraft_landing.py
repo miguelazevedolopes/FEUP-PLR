@@ -79,7 +79,7 @@ def aircraft_landing():
     model.Minimize(objective_expr)
 
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 0.09
+    solver.parameters.max_time_in_seconds = 600
     status = solver.Solve(model)
 
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
