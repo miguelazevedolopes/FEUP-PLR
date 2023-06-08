@@ -40,7 +40,7 @@ relate_times_before_and_after(TimesBefore,TimesAfter,TargetLandingTimes,LandingT
 scalar_product(PenaltyBefore,TimesBefore,#=,FirstVal),
 scalar_product(PenaltyAfter,TimesAfter,#=,SecondVal),
 sum([FirstVal,SecondVal],#=,Sum),
-labeling([minimize(Sum),time_out(600000,Flag),max_regret,bisect,up],LandingTimes),
+labeling([minimize(Sum),time_out(600000,Flag),leftmost,median,up],LandingTimes),
 statistics(runtime, [End|_]),
 ExecutionTime is End-Start,
 nl,write('Sum: '),write(Sum),nl,write('Times After: '),write(TimesAfter),nl,write('Times Before: '),write(TimesBefore),nl,write('Execution Time: '),write(ExecutionTime),nl,write(Flag).
