@@ -3,7 +3,7 @@ from ortools.sat.python import cp_model
 
 def aircraft_landing():
     # Read data from the file
-    with open('data/airland4.txt', 'r') as file:
+    with open('data/airland1.txt', 'r') as file:
         lines = file.readlines()
 
     # Extract values from the first line
