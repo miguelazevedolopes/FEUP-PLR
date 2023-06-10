@@ -33,9 +33,10 @@ seen,!,
 statistics(runtime, [Start|_]),
 length(LandingTimes,NumberPlanes),
 all_distinct(LandingTimes),
+create_before_matrix(NumberPlanes,NumberPlanes, IsBefore),
 enforce_earliest_and_latest_landing(EarliestLandingTimes,LatestLandingTimes,LandingTimes),
-enforce_separation(LandingTimes,SeparationTimes,LandingTimes),
-length(TimesBefore,NumberPlanes),
+Stop is NumberPlanes+1,
+enforce_separation(1,Stop,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes,IsBefore), %o problema está aquilength(TimesBefore,NumberPlanes),
 length(TimesAfter,NumberPlanes),
 times_before_target(TargetLandingTimes,TimesBefore,EarliestLandingTimes),
 times_after_target(TargetLandingTimes,TimesAfter,LatestLandingTimes),
@@ -43,8 +44,7 @@ relate_times_before_and_after(TimesBefore,TimesAfter,TargetLandingTimes,LandingT
 scalar_product(PenaltyBefore,TimesBefore,#=,FirstVal),
 scalar_product(PenaltyAfter,TimesAfter,#=,SecondVal),
 sum([FirstVal,SecondVal],#=,Sum),
-write(LandingTimes),
-labeling([minimize(Sum),time_out(300000,Flag),up,bisect,impact],LandingTimes),
+labeling([minimize(Sum),time_out(60000,Flag),up,step,impact],LandingTimes),
 statistics(runtime, [End|_]),
 ExecutionTime is End-Start,
 nl,write('Sum: '),write(Sum),nl,write('Times After: '),write(TimesAfter),nl,write('Times Before: '),write(TimesBefore),nl,write('Execution Time: '),write(ExecutionTime),nl,write(Flag).
@@ -133,18 +133,42 @@ HLT#=HTLT-HTB+HTA,
 relate_times_before_and_after(TTB,TTA,TTLT,TLT).
 
 
-enforce_separation_rec(_,[],[]).
+enforce_separation_rec(_,NumberPlanes,NumberPlanes,_,_,_,_,_).
 
-enforce_separation_rec(CurrentL,[HLT|TLT],[HST|TST]):-
-((CurrentL#\=HLT) #/\ (CurrentL#<HLT) #/\ ((HLT-CurrentL) #>= HST)) #\/
-((CurrentL#\=HLT) #/\ (CurrentL#>HLT) #/\ ((CurrentL-HLT) #>= HST)) #\/
-(CurrentL#=HLT),
-enforce_separation_rec(CurrentL,TLT,TST).
+enforce_separation_rec(IndexI,IndexJ,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes,IsBefore):-
+% nth1(IndexI,LatestLandingTimes,Li),
+% nth1(IndexJ,LatestLandingTimes,Lj),
+% nth1(IndexJ,EarliestLandingTimes,Ej),
+% nth1(IndexI,EarliestLandingTimes,Ei),
+nth1(IndexI,SeparationTimes,SubSepIJ),
+nth1(IndexJ,SubSepIJ,SepTimeIJ),
+nth1(IndexJ,SeparationTimes,SubSepJI),
+nth1(IndexI,SubSepJI,SepTimeJI),
+nth1(IndexI,IsBefore,IsBeforeI),
+element(IndexJ,IsBeforeI,IsBeforeIJ),
+nth1(IndexJ,IsBefore,IsBeforeJ),
+element(IndexI,IsBeforeJ,IsBeforeJI),
+element(IndexI,LandingTimes,Xi),
+element(IndexJ,LandingTimes,Xj),
+minimum(0,[IsBeforeIJ,IsBeforeJI]),
+(IndexI#=IndexJ) #\/
+((IndexI#\=IndexJ) #/\ (Xi#>=Xj+SepTimeJI) #/\ (IsBeforeJI)) #\/
+((IndexI#\=IndexJ) #/\ (Xj#>=Xi+SepTimeIJ) #/\ (IsBeforeIJ)),
+NewIndexJ is IndexJ+1, 
+enforce_separation_rec(IndexI,NewIndexJ,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes,IsBefore).
 
+enforce_separation(NumberPlanes,NumberPlanes,_,_,_,_,_).
 
-enforce_separation(_,[],_).
+enforce_separation(IndexI,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes,IsBefore):-
+NewIndexI is IndexI+1,
+enforce_separation_rec(IndexI,1,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes,IsBefore),
+enforce_separation(NewIndexI,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes,IsBefore).
 
-% enforce_separation(LandingTimes,SeparationTimes,LandingTimes)
-enforce_separation([CurrentL|TLT],[HST|TST],LandingTimes):-
-enforce_separation_rec(CurrentL,LandingTimes,HST),
-enforce_separation(TLT,TST,LandingTimes).
+create_before_matrix(_,0,[]).
+
+create_before_matrix(NumberPlanes,Index,IsBefore) :-
+length(CurrentBefore, NumberPlanes),
+domain(CurrentBefore, 0, 1),
+NewI is Index-1,
+create_before_matrix(NumberPlanes, NewI, IsBefore1),
+IsBefore = [CurrentBefore|IsBefore1].
