@@ -1,7 +1,7 @@
 :- use_module(library(clpfd)).
 :- use_module(library(lists)).
 
-
+% Main predicate
 aircraft_landing:-
 see('/home/miguel/Documents/Faculdade/PLR/FEUP-PLR/data/airland1.txt'),
 first_line_process(NumberPlanes,_),
@@ -31,7 +31,7 @@ nl,write('Sum: '),write(Sum),nl,write('Times After: '),write(TimesAfter),nl,writ
 
 % -------------- File Reading Predicates -------------- %
 
-% Lê os valores de uma linha e converte os de char codes para numeros, retorna uma lista
+% Reads the values ​​of a line and converts them from char codes to numbers, returns a list
 read_line_values([],[]).
 
 read_line_values(CurrentL,FinalList):-
@@ -40,7 +40,11 @@ read_line_values(RestL,F1),
 number_codes(Value,SubL),
 FinalList = [Value|F1].
 
-get_values_from_codes([32|T],[],T):-!.
+% Reads the codes from the line. Stops when it encounters a space (code 32) or at the line end.
+% get_values_from_codes(Current Line, Return Values, Remaing Codes in Line)
+get_values_from_codes([],[],[]):-!.
+
+get_values_from_codes([32|T],[],T):-!. 
 
 get_values_from_codes([H|T],L,R):-
 get_values_from_codes(T,L1,R),
@@ -48,13 +52,15 @@ L = [H|L1].
 
 % -------------- Reading from First Line -------------- %
 
+% Reads the first line
 first_line_process(NumberPlanes,FreezeTime):-
-read_line(L), % read line é a função de sicstus para ler uma linha da input stream
+read_line(L),
 read_line_values(L,Values),
 [NumberPlanes,FreezeTime] = Values.
 
 % -------------- Reading from Remaining Lines -------------- %
 
+% Reads the remaining lines after the first one
 remaining_lines_process(0,[],[],[],[],[],[],[]):-!.
 remaining_lines_process(NumberPlanes,AppearanceTimes,EarliestLandingTimes,TargetLandingTimes,LatestLandingTimes,PenaltyBefore,PenaltyAfter,SeparationTimes):-
 read_line(L1), 
@@ -75,14 +81,16 @@ SeparationTimes = [ST|TST].
 
 % -------------- Constraints -------------- %
 
-
+% Enforces earliest and latest landing times for the Landing Times variable
+%enforce_earliest_and_latest_landing(Earliest Landing Time, Latest Landing Time, Landing Time)
 enforce_earliest_and_latest_landing([],[],[]).
 
 enforce_earliest_and_latest_landing([HELT|TELT],[HLLT|TLLT],[HLT|TLT]):-
 domain([HLT],HELT,HLLT),
 enforce_earliest_and_latest_landing(TELT,TLLT,TLT).
 
-
+% Determines the domain of the Times Before variable
+%times_before_target(Target Landing Time, Times Before, Earliest Landing Times)
 times_before_target([],[],[]).
 
 times_before_target([HTLT|TTLT],[HTB|TTB],[HELT|TELT]):-
@@ -90,7 +98,8 @@ MaxDomain is HTLT-HELT,
 domain([HTB],0,MaxDomain),
 times_before_target(TTLT,TTB,TELT).
 
-
+% Determines the domain of the Times After variable
+%times_after_target(Target Landing Time, Times After, Latest Landing Times)
 times_after_target([],[],[]).
 
 times_after_target([HTLT|TTLT],[HTA|TTA],[HLLT|TLLT]):-
@@ -98,6 +107,8 @@ MaxDomain is HLLT-HTLT,
 domain([HTA],0,MaxDomain),
 times_after_target(TTLT,TTA,TLLT).
 
+% Relates Times Before with Times After and the Landing Times
+%relate_times_before_and_after(Times Before, Times After, Target Landing Times, Landing Times)
 relate_times_before_and_after([],[],[],[]).
 
 relate_times_before_and_after([HTB|TTB],[HTA|TTA],[HTLT|TTLT],[HLT|TLT]):-
@@ -105,7 +116,8 @@ minimum(0,[HTB,HTA]),
 HLT#=HTLT-HTB+HTA,
 relate_times_before_and_after(TTB,TTA,TTLT,TLT).
 
-
+% Recursive auxiliar predicate to enforce separation times
+%enforce_separation_rec(IndexI,IndexJ,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes,IsBefore)
 enforce_separation_rec(_,NumberPlanes,NumberPlanes,_,_,_,_,_).
 
 enforce_separation_rec(IndexI,IndexJ,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes,IsBefore):-
@@ -126,6 +138,8 @@ minimum(0,[IsBeforeIJ,IsBeforeJI]),
 NewIndexJ is IndexJ+1, 
 enforce_separation_rec(IndexI,NewIndexJ,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes,IsBefore).
 
+% Enforce separation times
+% enforce_separation(IndexI,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes,IsBefore)
 enforce_separation(NumberPlanes,NumberPlanes,_,_,_,_,_).
 
 enforce_separation(IndexI,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes,IsBefore):-
@@ -133,7 +147,8 @@ NewIndexI is IndexI+1,
 enforce_separation_rec(IndexI,1,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes,IsBefore),
 enforce_separation(NewIndexI,NumberPlanes,LandingTimes,SeparationTimes,LatestLandingTimes,EarliestLandingTimes,IsBefore).
 
-
+% Creates a matrix with domain variables that are either 0 or 1, depending if plane i lands before plane j or vice versa
+% create_before_matrix(NumberPlanes,Index,IsBefore)
 create_before_matrix(_,0,[]).
 
 create_before_matrix(NumberPlanes,Index,IsBefore) :-
