@@ -35,11 +35,16 @@ def aircraft_landing():
         
         current_line+=1
 
+    # Create the model
     model = cp_model.CpModel()
+
+    # Add Landing Times variable which has the domain [earliest_landing_times, latest_landing_times]
     landing_times = [model.NewIntVar(earliest_landing_times[i], latest_landing_times[i], f"LandingTime{i+1}") for i in range(number_planes)]
 
+    # Add constraint that the landing times must be all different
     model.AddAllDifferent(landing_times)
     
+    # Add new Bool Variable that is true if landing_times[i] < landing_times[j]
     is_before = []
 
     for i in range(number_planes):
@@ -57,6 +62,7 @@ def aircraft_landing():
                 # i must land before j
                 if latest_landing_times[i] < earliest_landing_times[j]:
                     model.Add(landing_times[j] >= landing_times[i] + separation_times[i][j])
+                    
                 # If the time windows of i and j overlap, ensure separation time is met
                 else:
                     model.Add(landing_times[i] >= landing_times[j] + separation_times[j][i]).OnlyEnforceIf(is_before[j][i])
