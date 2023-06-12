@@ -25,8 +25,8 @@
 
 
 aircraft_landing:-
-see('/Users/mafalda/Documents/FEUP/PLR/FEUP-PLR/data/airland2.txt'),
-% see('/home/miguel/Documents/Faculdade/PLR/FEUP-PLR/data/airland8.txt'),
+see('/Users/mafalda/Documents/FEUP/PLR/FEUP-PLR/data/airland1.txt'),
+% see('/home/miguel/Documents/Faculdade/PLR/FEUP-PLR/data/airland1.txt'),
 first_line_process(NumberPlanes,_),
 remaining_lines_process(NumberPlanes,_,EarliestLandingTimes,TargetLandingTimes,LatestLandingTimes,PenaltyBefore,PenaltyAfter,SeparationTimes),
 seen,!,
@@ -44,7 +44,9 @@ relate_times_before_and_after(TimesBefore,TimesAfter,TargetLandingTimes,LandingT
 scalar_product(PenaltyBefore,TimesBefore,#=,FirstVal),
 scalar_product(PenaltyAfter,TimesAfter,#=,SecondVal),
 sum([FirstVal,SecondVal],#=,Sum),
-labeling([minimize(Sum),time_out(60000,Flag),up,step,impact],LandingTimes),
+append(TimesBefore,TimesAfter,TimesCombined),
+append(TimesCombined,LandingTimes,ToLabel),
+labeling([minimize(Sum),time_out(30000,Flag),down,median,impact,restart],ToLabel),
 statistics(runtime, [End|_]),
 ExecutionTime is End-Start,
 nl,write('Sum: '),write(Sum),nl,write('Times After: '),write(TimesAfter),nl,write('Times Before: '),write(TimesBefore),nl,write('Execution Time: '),write(ExecutionTime),nl,write(Flag).
