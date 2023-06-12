@@ -1,4 +1,4 @@
-% consult('/Users/mafalda/Documents/FEUP/PLR/FEUP-PLR/aircraft_landing.pl').
+% consult('/Users/mafalda/Documents/FEUP/PLR/FEUP-PLR/teste.pl').
 
 :- use_module(library(clpfd)).
 :- use_module(library(lists)).
@@ -25,8 +25,8 @@
 
 
 aircraft_landing:-
-% see('/home/miguel/Documents/Faculdade/PLR/FEUP-PLR/airland1.txt'),
-see('/home/miguel/Documents/Faculdade/PLR/FEUP-PLR/data/airland8.txt'),
+see('/Users/mafalda/Documents/FEUP/PLR/FEUP-PLR/data/airland2.txt'),
+% see('/home/miguel/Documents/Faculdade/PLR/FEUP-PLR/data/airland8.txt'),
 first_line_process(NumberPlanes,_),
 remaining_lines_process(NumberPlanes,_,EarliestLandingTimes,TargetLandingTimes,LatestLandingTimes,PenaltyBefore,PenaltyAfter,SeparationTimes),
 seen,!,
